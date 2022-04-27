@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: eureka-service
+
+  cloud:
+    config:
+      profile: native
+      uri: ${CONFIG_SERVER_URL:http://ms-config-service:8888}
+

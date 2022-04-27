@@ -1,0 +1,83 @@
+version: '3.1'
+services:
+  mysql:
+    image: mysql:5.5
+    hostname: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - 3306:3306
+    networks:
+      - ms-network
+
+  configservice:
+    build:
+      context:  config-service
+      dockerfile: ./Dockerfile
+    restart: always
+    image: bookstore/spring-microservice-config-service
+    container_name: ms-config-service
+    ports:
+      - 8888:8888
+    networks:
+      - ms-network
+    volumes:
+      - "/var/log/spring/microservice:/var/log/spring/microservice"
+
+  eurekaservice:
+    build:
+      context:  ./eureka-service
+      dockerfile: ./Dockerfile
+    restart: always
+    image: bookstore/spring-microservice-eureka-service
+    container_name: ms-eureka-service
+    depends_on:
+      - configservice
+    ports:
+      - "8500:8500"
+    networks:
+      - ms-network
+    volumes:
+      - "/var/log/spring/microservice:/var/log/spring/microservice"
+
+  authservice:
+    build:
+      context:  auth-service
+      dockerfile: ./Dockerfile
+    restart: always
+    image: bookstore/spring-microservice-auth-service
+    container_name: ms-auth-service
+    depends_on:
+      - configservice
+      - mysql
+    ports:
+      - "8503:8503"
+    networks:
+      - ms-network
+    volumes:
+      - "/var/log/spring/microservice:/var/log/spring/microservice"
+
+  bookservice:
+    build:
+      context:  book-service
+      dockerfile: ./Dockerfile
+    restart: always
+    image: bookstore/spring-microservice-book-service
+    container_name: ms-book-service
+    depends_on:
+      - configservice
+      - mysql
+      - authservice
+    ports:
+      - "8502:8502"
+
+    networks:
+      - spring-microservice-network
+
+    volumes:
+      - "/var/log/spring/microservice:/var/log/spring/microservice"
+
+
+#docker network create -d bridge spring-microservice-network
+networks:
+  ms-network:
